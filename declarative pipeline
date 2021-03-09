@@ -1,0 +1,41 @@
+pipeline{
+    agent any;
+    tools{
+        maven "maven3.6.3"
+    }
+    stages{
+        stage("checkout from git"){
+            steps{
+               git credentialsId: 'd17cd27c-5b2e-4426-86f6-1f09cd23df46', url: 'https://github.com/rams777/maven-web-application.git' 
+                
+            }
+            
+        }
+        stage("build"){
+            steps{
+                sh "mvn clean package"
+        }
+        
+    }
+        stage("execute sonar"){
+            steps{
+                sh "mvn sonar:sonar"
+            }
+        }
+        stage("build atifact"){
+            steps{
+                sh "mvn clean deploy"
+            }
+        }
+        stage("deploy to the container"){
+            steps{
+                deploy adapters: [tomcat9(credentialsId: '5c54e8bc-0399-4c98-b434-02189103df66', path: '', url: 'http://100.24.45.225:8082/')], contextPath: null, war: '**/*.war'
+            }
+        }
+        
+    }
+}
+
+                 
+            
+
