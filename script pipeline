@@ -1,0 +1,32 @@
+node 
+    {
+        def mavenHome = tool name: "maven3.6.3"
+        properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '3', daysToKeepStr: '5', numToKeepStr: '3')), pipelineTriggers([pollSCM('*  * * * *')])])
+        stage("checkoutcode")
+        {
+            git credentialsId: 'd17cd27c-5b2e-4426-86f6-1f09cd23df46', url: 'https://github.com/rams777/maven-web-application.git'
+        }
+        stage("build")
+        {
+            sh "${mavenHome}/bin/mvn clean package"
+        }
+       stage("sonar")
+        {
+            sh "${mavenHome}/bin/mvn sonar:sonar"
+        } 
+        stage("artifact")
+        {
+            sh "${mavenHome}/bin/mvn deploy"
+        } 
+        stage("deploy to tomcat")
+        {
+            deploy adapters: [tomcat9(credentialsId: '5c54e8bc-0399-4c98-b434-02189103df66', path: '', url: 'http://100.24.45.225:8082/')], contextPath: null, war: '**/*.war'
+        } 
+        stage("sendemail")
+            {
+        emailext body: '''build over 
+
+regards
+rams''', subject: 'buildover', to: 'cchandu007@gmail.com'
+    }
+        }
